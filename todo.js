@@ -38,9 +38,9 @@ window.onload = function() {
 
   function addLocalStorage(todo) {
     const todos = obterLocalStorage() || [];
-    console.log(todo);
     if(todo.id == -1) {
-      todo.id = todos.at(-1).id+1;
+      const lastTodo = todos.at(-1);
+      todo.id = lastTodo ? lastTodo.id+1 : 0;
       todos.push(todo);
     } else {
       for(let t of todos) {
