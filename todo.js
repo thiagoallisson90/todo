@@ -19,6 +19,20 @@ window.addEventListener('load', function() {
     el.classList.remove('text-decoration-line-through');
   }
 
+  // Alerts
+  function showAlertOk(msg) {
+    const alertOk = document.getElementById('alert_ok');
+    alertOk.innerHTML = `
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <span>${msg}</span>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    `;
+    alertOk.classList.remove('cls_hidden');
+  }
+
   // ToDo
   function createTodo(desc, dt_final, id=undefined, status=0) {
     return {
@@ -224,6 +238,7 @@ window.addEventListener('load', function() {
     if(del==true) {
       delTodo(idTodo);
       remTodoInTable(idTodo);
+      showAlertOk('ToDo removido com sucesso!');
     }
   }
 
@@ -293,8 +308,10 @@ window.addEventListener('load', function() {
     if(id === undefined) {
       addTodoInTable(todo);
       addListenerTable();
+      showAlertOk(`ToDo inserido com sucesso!`);
     } else {
       updateTodoInTable(todo);
+      showAlertOk(`ToDo atualizado com sucesso!`);
     }
   });
 
