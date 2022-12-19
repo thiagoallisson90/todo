@@ -62,19 +62,33 @@
         <div class="modal-body">
           <!-- ToDo (desc, dt_final) -->
           <form class="form" id="form_add">
-            <input 
-              class="form-control" 
-              type="text"
-              placeholder="Digite Descrição da Tarefa"
-              id="desc_todo"
-              required
-            >
-            <input
-              class="form-control"
-              type="date"
-              id="dt_final_todo"
-              required
-            >
+            <div class="form-group">
+              <input 
+                class="form-control" 
+                type="text"
+                placeholder="Digite Descrição da Tarefa"
+                id="desc_todo"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <input
+                class="form-control"
+                type="date"
+                id="dt_final_todo"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="status_todo">Status:</label>
+              <select class="form-control" id="status_todo">
+                <option value="0">Pendente</option>
+                <option value="1">Finalizado</option>
+              </select>
+            </div>
+
             <input 
               class="form-control"
               type="hidden"

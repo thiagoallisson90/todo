@@ -1,4 +1,4 @@
-window.addEventListener('load', () => {
+window.addEventListener('load', function() {
   // Utils
   function dateISOToLoc(date) {
     const dt = date.split('-');
@@ -11,12 +11,21 @@ window.addEventListener('load', () => {
     return `${dt[2]}-${dt[1]}-${dt[0]}`;
   }
 
+  function addClassLineThrough(el) {
+    el.classList.add('text-decoration-line-through');
+  }
+
+  function remClassLineThrough(el) {
+    el.classList.remove('text-decoration-line-through');
+  }
+
   // ToDo
-  function createTodo(desc, dt_final, id=undefined) {
+  function createTodo(desc, dt_final, id=undefined, status=0) {
     return {
       desc,
       dt_final: dateISOToLoc(dt_final),
-      id
+      id,
+      status
     };
   }
 
@@ -49,6 +58,7 @@ window.addEventListener('load', () => {
         if(t.id == todo.id) {
           t.desc = todo.desc;
           t.dt_final = todo.dt_final;
+          t.status = todo.status;
         }
       }
     }
@@ -64,6 +74,18 @@ window.addEventListener('load', () => {
     for(let i in todos) {
       if(todos[i].id == id) {
         todos.splice(i, 1);
+        break;
+      }
+    }
+
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }
+    
+  function saveTodo(todo) {
+    const todos = getAllTodo();
+    for(let i in todos) {
+      if(todos[i].id == todo.id) {
+        todos.splice(i, 1, todo);
         break;
       }
     }
@@ -92,12 +114,24 @@ window.addEventListener('load', () => {
     tbody.innerHTML += `
       <tr class="text-center" id="tr_${todo.id}">
         <td>
-          <input type="checkbox" id="ckb_${todo.id}" data-target="checkout" data-index="${todo.id}">
+          <input 
+            type="checkbox" 
+            id="ckb_${todo.id}" 
+            data-target="checkout" 
+            data-index="${todo.id}"
+            ${todo.status == 1 ? 'checked' : ''}
+          >
         </td>
-        <td id="desc_${todo.id}">
+        <td 
+          id="desc_${todo.id}"
+          ${todo.status == 1 ? 'class="text-decoration-line-through"' : ''}
+        >
           ${todo.desc}
         </td>
-        <td id="dt_${todo.id}">
+        <td 
+          id="dt_${todo.id}"
+          ${todo.status == 1 ? 'class="text-decoration-line-through"' : ''}
+        >
           ${todo.dt_final}
         </td>
         <td>
@@ -120,8 +154,6 @@ window.addEventListener('load', () => {
         </td>
       </tr>
     `;
-
-    addListenerTable();
   }
 
   function addTodosInTable(todos) {
@@ -129,12 +161,25 @@ window.addEventListener('load', () => {
     for(let todo of todos) {
       addTodoInTable(todo);
     }
+    addListenerTable();
   }
 
   function updateTodoInTable(todo) {
-    document.getElementById(`desc_${todo.id}`).innerHTML = todo.desc;
-    document.getElementById(`dt_${todo.id}`).innerHTML = todo.dt_final;
-    addListenerTable();
+    const descEl = document.getElementById(`desc_${todo.id}`);
+    const dtEl = document.getElementById(`dt_${todo.id}`);
+
+    descEl.innerHTML = todo.desc;
+    dtEl.innerHTML = todo.dt_final;
+
+    if(todo.status == 1) {
+      addClassLineThrough(descEl);
+      addClassLineThrough(dtEl);
+    } else {
+      const ckb = document.getElementById(`ckb_${todo.id}`);
+      ckb.removeAttribute('checked');
+      remClassLineThrough(descEl);
+      remClassLineThrough(dtEl);
+    }
   }
 
   function loadTodos() {
@@ -144,6 +189,7 @@ window.addEventListener('load', () => {
     for(let t of todos) {
       addTodoInTable(t);
     }
+    addListenerTable();
   }
 
   // Listeners
@@ -151,21 +197,25 @@ window.addEventListener('load', () => {
     const desc = document.getElementById(`desc_${idTodo}`);
     const dt_final = document.getElementById(`dt_${idTodo}`);
 
-    if(!desc.style.textDecoration) {
-      const lt = 'line-through';
-      desc.style.textDecoration = lt;
-      dt_final.style.textDecoration = lt;
+    todo = getTodoById(idTodo);
+    if(!desc.classList.contains('text-decoration-line-through')) {
+      addClassLineThrough(desc);
+      addClassLineThrough(dt_final);
+      todo.status = 1;
     } else {
-      desc.style.removeProperty('text-decoration');
-      dt_final.style.removeProperty('text-decoration');
+      remClassLineThrough(desc);
+      remClassLineThrough(dt_final);
+      todo.status = 0;
     }
+
+    saveTodo(todo);
   }
 
   function clickBtnUp(idTodo) {
     $('#modal_add').modal('toggle');
     const todo = getTodoById(idTodo);
     if(todo != false) {
-      fillForm(todo.desc, todo.dt_final, todo.id);
+      fillForm(todo);
     }
   }
 
@@ -199,10 +249,14 @@ window.addEventListener('load', () => {
     document.getElementById('id_todo').value = ''; 
   }
 
-  function fillForm(desc, dt_final, id) {
-    document.getElementById('desc_todo').value = desc;
-    document.getElementById('dt_final_todo').value = dateLocToISO(dt_final);
-    document.getElementById('id_todo').value = id; 
+  function fillForm(todo) {
+    document.getElementById('desc_todo').value = todo.desc;
+    document.getElementById('dt_final_todo').value = dateLocToISO(todo.dt_final);
+    document.getElementById('id_todo').value = todo.id; 
+
+    const optionSel = String(todo.status);
+    const statusEl = document.getElementById('status_todo');
+    statusEl.selectedIndex = optionSel;
   }
 
   // Default features
@@ -227,8 +281,10 @@ window.addEventListener('load', () => {
     const desc = document.getElementById('desc_todo').value;
     let dt_final = document.getElementById('dt_final_todo').value;
     const id = document.getElementById('id_todo').value || undefined;
+    const statusEl = document.getElementById('status_todo');
+    const status = Number(statusEl.options[statusEl.selectedIndex].value);
     
-    const todo = createTodo(desc, dt_final, id);
+    const todo = createTodo(desc, dt_final, id, status);
 
     addTodo(todo);  
     ev.target.reset();
@@ -236,6 +292,7 @@ window.addEventListener('load', () => {
 
     if(id === undefined) {
       addTodoInTable(todo);
+      addListenerTable();
     } else {
       updateTodoInTable(todo);
     }
