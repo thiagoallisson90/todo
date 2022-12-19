@@ -66,7 +66,7 @@ window.addEventListener('load', () => {
     tbody.innerHTML += `
       <tr class="text-center" id="tr_${todo.id}">
         <td>
-          <input type="checkbox" id="ckb_${todo.id}">
+          <input type="checkbox" id="ckb_${todo.id}" data-target="checkout" data-index="${todo.id}">
         </td>
         <td id="desc_${todo.id}">
           ${todo.desc}
@@ -75,13 +75,27 @@ window.addEventListener('load', () => {
           ${todo.dt_final}
         </td>
         <td>
-          <button class="btn btn-success" id="up_${todo.id}">Alterar</button>
-          <button class="btn btn-danger" id="del_${todo.id}">Deletar</button>
+          <button 
+            class="btn btn-success" 
+            id="up_${todo.id}"
+            data-target="update" 
+            data-index="${todo.id}"
+          >
+            Alterar
+          </button>
+          <button 
+            class="btn btn-danger" 
+            id="del_${todo.id}"
+            data-target="delete" 
+            data-index="${todo.id}"
+          >
+            Deletar
+          </button>
         </td>
       </tr>
     `;
 
-    tbody.addEventListener('click', tbodyClick);
+    tbody.addEventListener('click', clickTBody);
   }
 
   function loadTodos() {
@@ -94,7 +108,7 @@ window.addEventListener('load', () => {
   }
 
   // Listeners
-  function ckbClick(idTodo) {   
+  function clickCkb(idTodo) {   
     const desc = document.getElementById(`desc_${idTodo}`);
     const dt_final = document.getElementById(`dt_${idTodo}`);
 
@@ -105,23 +119,6 @@ window.addEventListener('load', () => {
     } else {
       desc.style.removeProperty('text-decoration');
       dt_final.style.removeProperty('text-decoration');
-    }
-  }
-
-  function tbodyClick(ev) {
-    const elemento = ev.target;
-    const [tipoEl, idTodo] = elemento.getAttribute('id').split('_');
-    
-    switch(tipoEl) {
-      case 'ckb': 
-        ckbClick(idTodo);
-        break;
-      case 'up':
-        clickBtnUp(idTodo);
-        break;
-      case 'del':
-        clickBtnDel(idTodo);
-        break;
     }
   }
 
@@ -145,8 +142,23 @@ window.addEventListener('load', () => {
     }
   }
 
+  const clicks = {
+    'checkout': clickCkb,
+    'update': clickBtnUp,
+    'delete': clickBtnDel
+  };
+
+  function clickTBody(ev) {
+    const element = ev.target;
+    
+    const id = Number(element.getAttribute('data-index'));
+    const dataTarget = element.getAttribute('data-target');
+    
+    clicks[dataTarget](id);
+  }
+
   // Form
-  function clearForms() {
+  function clearForm() {
     document.getElementById('desc_todo').value = '';
     document.getElementById('dt_final_todo').value = '';
     document.getElementById('id_todo').value = ''; 
@@ -202,6 +214,6 @@ window.addEventListener('load', () => {
   loadTodos();
 
   $('#modal_add').on('hidden.bs.modal', function (ev) {
-    clearForms();
+    clearForm();
   });
 });
