@@ -98,6 +98,13 @@ window.addEventListener('load', () => {
     tbody.addEventListener('click', clickTBody);
   }
 
+  function addTodosInTable(todos) {
+    clearTable();
+    for(let todo of todos) {
+      addTodoInTable(todo);
+    }
+  }
+
   function loadTodos() {
     const todos = getAllTodo();
 
@@ -176,10 +183,7 @@ window.addEventListener('load', () => {
         todosSelecionados.push(t);
       }
     }
-    clearTable();
-    for(let t of todosSelecionados) {
-      addTodoInTable(t);
-    }
+    addTodosInTable(todosSelecionados);
   });
 
   const formAdd = document.getElementById('form_add');
