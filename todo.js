@@ -113,7 +113,7 @@ window.addEventListener('load', function() {
     tbody.innerHTML = '';
   }
 
-  function remTodoInTable(id) {
+  function remTodoOfTable(id) {
     const tr = document.getElementById(`tr_${id}`);
     tr.remove();
   }
@@ -184,12 +184,13 @@ window.addEventListener('load', function() {
 
     descEl.innerHTML = todo.desc;
     dtEl.innerHTML = todo.dt_final;
+    const ckb = document.getElementById(`ckb_${todo.id}`);
 
     if(todo.status == 1) {
       addClassLineThrough(descEl);
       addClassLineThrough(dtEl);
-    } else {
-      const ckb = document.getElementById(`ckb_${todo.id}`);
+      ckb.setAttribute('checked', '');
+    } else {  
       ckb.removeAttribute('checked');
       remClassLineThrough(descEl);
       remClassLineThrough(dtEl);
@@ -237,7 +238,7 @@ window.addEventListener('load', function() {
     const del = confirm('Deseja realmente deletar ToDo?');
     if(del==true) {
       delTodo(idTodo);
-      remTodoInTable(idTodo);
+      remTodoOfTable(idTodo);
       showAlertOk('ToDo removido com sucesso!');
     }
   }
