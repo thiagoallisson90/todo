@@ -1,9 +1,22 @@
 window.addEventListener('load', () => {
+  // Utils
+  function dateISOToLoc(date) {
+    const dt = date.split('-');
+    dt[2] = String(Number(dt[2])+1);
+    return new Date(dt[0]+'-'+dt[1]+'-'+dt[2]).toLocaleDateString();
+  }
+
+  function dateLocToISO(date) {
+    //const dt = new Date(date).toISOString()
+    console.log(new Date('22/12/2022'));
+    return '2022-12-19';
+  }
+
   // ToDo
   function createTodo(desc, dt_final, id=undefined) {
     return {
       desc,
-      dt_final,
+      dt_final: dateISOToLoc(dt_final),
       id
     };
   }
@@ -142,11 +155,7 @@ window.addEventListener('load', () => {
     $('#modal_add').modal('toggle');
     const todo = getTodoById(idTodo);
     if(todo != false) {
-      document.getElementById(`desc_todo`).value = todo.desc;
-      const dt = todo.dt_final.split('/');
-      document.getElementById(`dt_final_todo`).value = 
-        dt[2] + '-' + dt[1] + '-' + dt[0];
-      document.getElementById(`id_todo`).value = todo.id;
+      fillForm(todo.desc, todo.dt_final, todo.id);
     }
   }
 
@@ -182,7 +191,7 @@ window.addEventListener('load', () => {
 
   function fillForm(desc, dt_final, id) {
     document.getElementById('desc_todo').value = desc;
-    document.getElementById('dt_final_todo').value = dt_final;
+    document.getElementById('dt_final_todo').value = dateLocToISO(dt_final);
     document.getElementById('id_todo').value = id; 
   }
 
@@ -206,8 +215,7 @@ window.addEventListener('load', () => {
     ev.preventDefault();
     
     const desc = document.getElementById('desc_todo').value;
-    let dt_final_ini = document.getElementById('dt_final_todo').value.split('-');
-    const dt_final = dt_final_ini[2] + '/' + dt_final_ini[1] + '/' +  dt_final_ini[0];
+    let dt_final = document.getElementById('dt_final_todo').value;
     const id = document.getElementById('id_todo').value || undefined;
     
     const todo = createTodo(desc, dt_final, id);
@@ -218,8 +226,6 @@ window.addEventListener('load', () => {
 
     if(id === undefined) {
       addTodoInTable(todo);
-    } else {
-      fillForm(desc, dt_final, id);
     }
   });
 
