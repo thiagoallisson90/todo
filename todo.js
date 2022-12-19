@@ -196,7 +196,7 @@ window.addEventListener('load', function() {
     }
   }
 
-  function loadTodos() {
+  function loadTodosInTable() {
     const todos = getAllTodo();
 
     clearTable();
@@ -339,5 +339,5 @@ window.addEventListener('load', function() {
     clearForm();
   });
 
-  loadTodos();
+  loadTodosInTable();
 });
