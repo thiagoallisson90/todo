@@ -6,7 +6,7 @@ window.addEventListener('load', function() {
 
   function addTodo(todo) {
     const todos = getAllTodo();
-    if(todo.id == -1) {
+    if(todo.id == undefined) {
       const lastTodo = todos.at(-1);
       todo.id = lastTodo ? lastTodo.id+1 : 0;
       todos.push(todo);
@@ -157,7 +157,7 @@ window.addEventListener('load', function() {
     const desc = document.getElementById('desc_todo').value;
     let dt_final_ini = document.getElementById('dt_final_todo').value.split('-');
     const dt_final = dt_final_ini[2] + '/' + dt_final_ini[1] + '/' +  dt_final_ini[0];
-    const id = document.getElementById('id_todo').value || -1;
+    const id = document.getElementById('id_todo').value || undefined;
     
     const todo = {
       desc,
@@ -169,7 +169,7 @@ window.addEventListener('load', function() {
     ev.target.reset();
     $('#modal_add').modal('toggle');
 
-    if(id == -1) {
+    if(id == undefined) {
       addTodoNaTabela(todo);
     } else {
       document.getElementById(`desc_${id}`).innerHTML = desc;
