@@ -275,19 +275,39 @@ window.addEventListener('load', function() {
   }
 
   // Default features
-  const form = document.getElementById('form_pesquisa');
-  form.addEventListener('submit', function(ev) {
+  const formSearch = document.getElementById('form_pesquisa');
+  const inputSearch = document.getElementById('input_todo');
+  formSearch.addEventListener('submit', function(ev) {
     ev.preventDefault();
-    const descPesquisar = document.getElementById('input_todo').value;
+    const value = inputSearch.value;
     const todos = getAllTodo();
     const todosSelecionados = [];
     for(let t of todos) {
-      if(t.desc.toLowerCase().includes(descPesquisar.toLowerCase())) {
+      if(t.desc.toLowerCase().includes(value.toLowerCase())) {
         todosSelecionados.push(t);
       }
     }
     addTodosInTable(todosSelecionados);
   });
+
+  function debounce(func, wait) {
+    let timer = null;
+    return function() {
+      clearTimeout(timer);
+      timer = setTimeout(func, wait);
+    }
+  }
+  inputSearch.addEventListener('input', debounce(function() {
+    const value = inputSearch.value;
+    const todos = getAllTodo();
+    const todosSelecionados = [];
+    for(let t of todos) {
+      if(t.desc.toLowerCase().includes(value.toLowerCase())) {
+        todosSelecionados.push(t);
+      }
+    }
+    addTodosInTable(todosSelecionados);
+  }, 1500))
 
   const formAdd = document.getElementById('form_add');
   formAdd.addEventListener('submit', function(ev) {  
