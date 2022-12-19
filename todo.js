@@ -1,12 +1,25 @@
-window.addEventListener('load', function() {
+window.addEventListener('load', () => {
+  // Repo ToDo
   function getAllTodo() {
     const todoStr = localStorage.getItem('todos');
     return todoStr ? JSON.parse(todoStr) : [];
   }
 
+  function getTodoById(id) {
+    const todos = getAllTodo();
+    
+    for(let todo of todos) {
+      if(todo.id == id) {
+        return todo;
+      }
+    }
+
+    return false;
+  }
+
   function addTodo(todo) {
     const todos = getAllTodo();
-    if(todo.id == undefined) {
+    if(todo.id === undefined) {
       const lastTodo = todos.at(-1);
       todo.id = lastTodo ? lastTodo.id+1 : 0;
       todos.push(todo);
@@ -36,98 +49,19 @@ window.addEventListener('load', function() {
 
     localStorage.setItem('todos', JSON.stringify(todos));
   }
-
-  function getTodoById(id) {
-    const todos = getAllTodo();
-    
-    for(let t of todos) {
-      if(t.id == id) {
-        return t;
-      }
-    }
-
-    return false;
-  }
-
-  function limpaTabela() {
+  
+  // Table
+  function clearTable() {
     const tbody = document.querySelector('#table_todos tbody');
     tbody.innerHTML = '';
   }
 
-  const form = document.getElementById('form_pesquisa');
-  form.addEventListener('submit', function(ev) {
-    ev.preventDefault();
-    const descPesquisar = document.getElementById('input_todo').value;
-    const todos = getAllTodo();
-    const todosSelecionados = [];
-    for(let t of todos) {
-      if(t.desc.toLowerCase().includes(descPesquisar.toLowerCase())) {
-        todosSelecionados.push(t);
-      }
-    }
-    limpaTabela();
-    for(let t of todosSelecionados) {
-      addTodoNaTabela(t);
-    }
-  });
-
-  function addComportamentoCkb(idTodo) {   
-    const desc = document.getElementById(`desc_${idTodo}`);
-    const dt_final = document.getElementById(`dt_${idTodo}`);
-
-    if(!desc.style.textDecoration) {
-      const lt = 'line-through';
-      desc.style.textDecoration = lt;
-      dt_final.style.textDecoration = lt;
-    } else {
-      desc.style.textDecoration = '';
-      dt_final.style.textDecoration = '';
-    }
-  }
-
-  function delTodoDaTabela(id) {
+  function remTodoInTable(id) {
     const tr = document.getElementById(`tr_${id}`);
     tr.remove();
   }
 
-  function tbodyClick(ev) {
-    const elemento = ev.target;
-    const [tipoEl, idTodo] = elemento.getAttribute('id').split('_');
-    
-    switch(tipoEl) {
-      case 'ckb': 
-        addComportamentoCkb(idTodo);
-        break;
-      case 'up':
-        addComportamentoBtnUp(idTodo);
-        break;
-      case 'del':
-        addComportamentoBtnDel(idTodo);
-        break;
-    }
-  }
-
-  function addComportamentoBtnUp(idTodo) {
-    $('#modal_add').modal('toggle');
-    const todo = getTodoById(idTodo);
-    if(todo != false) {
-      document.getElementById(`desc_todo`).value = todo.desc;
-      const dt = todo.dt_final.split('/');
-      document.getElementById(`dt_final_todo`).value = 
-        dt[2] + '-' + dt[1] + '-' + dt[0];
-      document.getElementById(`id_todo`).value = todo.id;
-    }
-  }
-
-  function addComportamentoBtnDel(idTodo) {
-    const del = confirm('Deseja realmente deletar ToDo?');
-    if(del==true) {
-      delTodo(idTodo);
-      delTodoDaTabela(idTodo);
-    }
-  }
-
-  function addTodoNaTabela(todo) {
+  function addTodoInTable(todo) {
     const tbody = document.querySelector('#table_todos tbody');
     tbody.innerHTML += `
       <tr class="text-center" id="tr_${todo.id}">
@@ -150,6 +84,92 @@ window.addEventListener('load', function() {
     tbody.addEventListener('click', tbodyClick);
   }
 
+  function loadTodos() {
+    const todos = getAllTodo();
+
+    clearTable();
+    for(let t of todos) {
+      addTodoInTable(t);
+    }
+  }
+
+  // Listeners
+  function ckbClick(idTodo) {   
+    const desc = document.getElementById(`desc_${idTodo}`);
+    const dt_final = document.getElementById(`dt_${idTodo}`);
+
+    if(!desc.style.textDecoration) {
+      const lt = 'line-through';
+      desc.style.textDecoration = lt;
+      dt_final.style.textDecoration = lt;
+    } else {
+      desc.style.removeProperty('text-decoration');
+      dt_final.style.removeProperty('text-decoration');
+    }
+  }
+
+  function tbodyClick(ev) {
+    const elemento = ev.target;
+    const [tipoEl, idTodo] = elemento.getAttribute('id').split('_');
+    
+    switch(tipoEl) {
+      case 'ckb': 
+        ckbClick(idTodo);
+        break;
+      case 'up':
+        clickBtnUp(idTodo);
+        break;
+      case 'del':
+        clickBtnDel(idTodo);
+        break;
+    }
+  }
+
+  function clickBtnUp(idTodo) {
+    $('#modal_add').modal('toggle');
+    const todo = getTodoById(idTodo);
+    if(todo != false) {
+      document.getElementById(`desc_todo`).value = todo.desc;
+      const dt = todo.dt_final.split('/');
+      document.getElementById(`dt_final_todo`).value = 
+        dt[2] + '-' + dt[1] + '-' + dt[0];
+      document.getElementById(`id_todo`).value = todo.id;
+    }
+  }
+
+  function clickBtnDel(idTodo) {
+    const del = confirm('Deseja realmente deletar ToDo?');
+    if(del==true) {
+      delTodo(idTodo);
+      remTodoInTable(idTodo);
+    }
+  }
+
+  // Form
+  function clearForms() {
+    document.getElementById('desc_todo').value = '';
+    document.getElementById('dt_final_todo').value = '';
+    document.getElementById('id_todo').value = ''; 
+  }
+
+  // Default features
+  const form = document.getElementById('form_pesquisa');
+  form.addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    const descPesquisar = document.getElementById('input_todo').value;
+    const todos = getAllTodo();
+    const todosSelecionados = [];
+    for(let t of todos) {
+      if(t.desc.toLowerCase().includes(descPesquisar.toLowerCase())) {
+        todosSelecionados.push(t);
+      }
+    }
+    clearTable();
+    for(let t of todosSelecionados) {
+      addTodoInTable(t);
+    }
+  });
+
   const formAdd = document.getElementById('form_add');
   function salvarTodo(ev) {  
     ev.preventDefault();
@@ -170,7 +190,7 @@ window.addEventListener('load', function() {
     $('#modal_add').modal('toggle');
 
     if(id == undefined) {
-      addTodoNaTabela(todo);
+      addTodoInTable(todo);
     } else {
       document.getElementById(`desc_${id}`).innerHTML = desc;
       document.getElementById(`dt_${id}`).innerHTML = dt_final;
@@ -179,24 +199,9 @@ window.addEventListener('load', function() {
   }
   formAdd.addEventListener('submit', salvarTodo);
 
-  function carregarTodos() {
-    const todos = getAllTodo();
+  loadTodos();
 
-    limpaTabela();
-    for(let t of todos) {
-      addTodoNaTabela(t);
-    }
-  }
-
-  function limparForm() {
-    document.getElementById('desc_todo').value = '';
-    document.getElementById('dt_final_todo').value = '';
-    document.getElementById('id_todo').removeAttribute('value');
-  }
-
-  carregarTodos();
-
-  $('#modal_add').on('hidden.bs.modal', function (e) {
-    limparForm();
+  $('#modal_add').on('hidden.bs.modal', function (ev) {
+    clearForms();
   });
 });
