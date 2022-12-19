@@ -1,4 +1,13 @@
 window.addEventListener('load', () => {
+  // ToDo
+  function createTodo(desc, dt_final, id=undefined) {
+    return {
+      desc,
+      dt_final,
+      id
+    };
+  }
+
   // Repo ToDo
   function getAllTodo() {
     const todoStr = localStorage.getItem('todos');
@@ -171,6 +180,12 @@ window.addEventListener('load', () => {
     document.getElementById('id_todo').value = ''; 
   }
 
+  function fillForm(desc, dt_final, id) {
+    document.getElementById('desc_todo').value = desc;
+    document.getElementById('dt_final_todo').value = dt_final;
+    document.getElementById('id_todo').value = id; 
+  }
+
   // Default features
   const form = document.getElementById('form_pesquisa');
   form.addEventListener('submit', function(ev) {
@@ -195,29 +210,23 @@ window.addEventListener('load', () => {
     const dt_final = dt_final_ini[2] + '/' + dt_final_ini[1] + '/' +  dt_final_ini[0];
     const id = document.getElementById('id_todo').value || undefined;
     
-    const todo = {
-      desc,
-      dt_final,
-      id
-    };
+    const todo = createTodo(desc, dt_final, id);
 
     addTodo(todo);  
     ev.target.reset();
     $('#modal_add').modal('toggle');
 
-    if(id == undefined) {
+    if(id === undefined) {
       addTodoInTable(todo);
     } else {
-      document.getElementById(`desc_${id}`).innerHTML = desc;
-      document.getElementById(`dt_${id}`).innerHTML = dt_final;
-      document.getElementById(`id_todo`).removeAttribute('value');
+      fillForm(desc, dt_final, id);
     }
   }
   formAdd.addEventListener('submit', salvarTodo);
 
-  loadTodos();
-
   $('#modal_add').on('hidden.bs.modal', function (ev) {
     clearForm();
   });
+
+  loadTodos();
 });
