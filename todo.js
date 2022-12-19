@@ -3,13 +3,12 @@ window.addEventListener('load', () => {
   function dateISOToLoc(date) {
     const dt = date.split('-');
     dt[2] = String(Number(dt[2])+1);
-    return new Date(dt[0]+'-'+dt[1]+'-'+dt[2]).toLocaleDateString();
+    return new Date(`${dt[0]}-${dt[1]}-${dt[2]}`).toLocaleDateString();
   }
 
   function dateLocToISO(date) {
-    //const dt = new Date(date).toISOString()
-    console.log(new Date('22/12/2022'));
-    return '2022-12-19';
+    const dt = date.split('/');
+    return `${dt[2]}-${dt[1]}-${dt[0]}`;
   }
 
   // ToDo
@@ -127,6 +126,11 @@ window.addEventListener('load', () => {
     }
   }
 
+  function updateTodoInTable(todo) {
+    document.getElementById(`desc_${todo.id}`).innerHTML = todo.desc;
+    document.getElementById(`dt_${todo.id}`).innerHTML = todo.dt_final;
+  }
+
   function loadTodos() {
     const todos = getAllTodo();
 
@@ -226,6 +230,8 @@ window.addEventListener('load', () => {
 
     if(id === undefined) {
       addTodoInTable(todo);
+    } else {
+      updateTodoInTable(todo);
     }
   });
 
