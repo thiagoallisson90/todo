@@ -1,43 +1,11 @@
-window.onload = function() {
-  // Desabilitar o envio do formulário quando
-  // se clica no botão Pesquisar
-
-  // Recuperar o form do HTML
-  // const = define uma constante
-  // objeto document = representa o HTML (DOM) dentro do JS
-  // getElementById = recupera um elemento (tag) pelo valor do id
-  const form = document.getElementById('form_pesquisa');
-
-  // a partir do form, usar o método addEventListener
-  // definir uma função para tratar o evento submit do form
-  const trataSubmit = function(evento) {
-    evento.preventDefault();
-    // console.log('Executando trataSubmit');
-    // Recuperar valor digitado no input_todo
-    const value = document.getElementById('input_todo').value;
-  }
-  form.addEventListener('submit', trataSubmit);
-
-  // Recuperar o elemento btn_add
-  // Add event listener de click para btn_add
-  // Cria a função que adiciona um ToDo e exibe este na tabela
-  //  - LocalStorage: funcionar como banco de dados
-  const btnAdd = document.getElementById('btn_add');
-  btnAdd.addEventListener('click', function(){
-    //$('#modal_add').modal('toggle');
-  });
-
-  function limpaTabela() {
-    const tbody = document.querySelector('#table_todos tbody');
-    tbody.innerHTML = '';
+window.addEventListener('load', function() {
+  function getAllTodo() {
+    const todoStr = localStorage.getItem('todos');
+    return todoStr ? JSON.parse(todoStr) : [];
   }
 
-  function obterLocalStorage() {
-    return JSON.parse(localStorage.getItem('todos'));
-  }
-
-  function addLocalStorage(todo) {
-    const todos = obterLocalStorage() || [];
+  function addTodo(todo) {
+    const todos = getAllTodo();
     if(todo.id == -1) {
       const lastTodo = todos.at(-1);
       todo.id = lastTodo ? lastTodo.id+1 : 0;
@@ -53,8 +21,8 @@ window.onload = function() {
     localStorage.setItem('todos', JSON.stringify(todos));
   }
 
-  function delLocalStorage(id) {
-    const todos = obterLocalStorage() || [];
+  function delTodo(id) {
+    const todos = getAllTodo();
     if(todos.length == 0) {
       return;
     }
@@ -69,8 +37,8 @@ window.onload = function() {
     localStorage.setItem('todos', JSON.stringify(todos));
   }
 
-  function buscarLocalStorage(id) {
-    const todos = obterLocalStorage() || [];
+  function getTodoById(id) {
+    const todos = getAllTodo();
     
     for(let t of todos) {
       if(t.id == id) {
@@ -80,6 +48,28 @@ window.onload = function() {
 
     return false;
   }
+
+  function limpaTabela() {
+    const tbody = document.querySelector('#table_todos tbody');
+    tbody.innerHTML = '';
+  }
+
+  const form = document.getElementById('form_pesquisa');
+  form.addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    const descPesquisar = document.getElementById('input_todo').value;
+    const todos = getAllTodo();
+    const todosSelecionados = [];
+    for(let t of todos) {
+      if(t.desc.toLowerCase().includes(descPesquisar.toLowerCase())) {
+        todosSelecionados.push(t);
+      }
+    }
+    limpaTabela();
+    for(let t of todosSelecionados) {
+      addTodoNaTabela(t);
+    }
+  });
 
   function addComportamentoCkb(idTodo) {   
     const desc = document.getElementById(`desc_${idTodo}`);
@@ -101,9 +91,6 @@ window.onload = function() {
   }
 
   function tbodyClick(ev) {
-    // ev.target = elemento que disparou o evento
-    //  - Button: upadate (tipo: up) ou delete (tipo: del)
-    //  - Checkbox (tipo: ckb)
     const elemento = ev.target;
     const [tipoEl, idTodo] = elemento.getAttribute('id').split('_');
     
@@ -122,7 +109,7 @@ window.onload = function() {
 
   function addComportamentoBtnUp(idTodo) {
     $('#modal_add').modal('toggle');
-    const todo = buscarLocalStorage(idTodo);
+    const todo = getTodoById(idTodo);
     if(todo != false) {
       document.getElementById(`desc_todo`).value = todo.desc;
       const dt = todo.dt_final.split('/');
@@ -135,7 +122,7 @@ window.onload = function() {
   function addComportamentoBtnDel(idTodo) {
     const del = confirm('Deseja realmente deletar ToDo?');
     if(del==true) {
-      delLocalStorage(idTodo);
+      delTodo(idTodo);
       delTodoDaTabela(idTodo);
     }
   }
@@ -178,15 +165,13 @@ window.onload = function() {
       id
     };
 
-    addLocalStorage(todo);  
+    addTodo(todo);  
     ev.target.reset();
     $('#modal_add').modal('toggle');
 
     if(id == -1) {
-      // Adicionando nova tarefa
       addTodoNaTabela(todo);
     } else {
-      // Atualizar uma tarefa já existente
       document.getElementById(`desc_${id}`).innerHTML = desc;
       document.getElementById(`dt_${id}`).innerHTML = dt_final;
       document.getElementById(`id_todo`).removeAttribute('value');
@@ -195,7 +180,7 @@ window.onload = function() {
   formAdd.addEventListener('submit', salvarTodo);
 
   function carregarTodos() {
-    const todos = obterLocalStorage() || [];
+    const todos = getAllTodo();
 
     limpaTabela();
     for(let t of todos) {
@@ -214,26 +199,4 @@ window.onload = function() {
   $('#modal_add').on('hidden.bs.modal', function (e) {
     limparForm();
   });
-
-  const btnPes = document.getElementById('btn_pesquisar');
-  btnPes.addEventListener('click', function(ev) {
-    const descPesquisar = document.getElementById('input_todo').value;
-    
-    const todos = obterLocalStorage() || [];
-    const todosSelecionados = [];
-    for(let t of todos) {
-      if(t.desc.toLowerCase().includes(descPesquisar.toLowerCase())) {
-        todosSelecionados.push(t);
-      }
-    }
-    addNaTabelaPorDesc(todosSelecionados);
-  });
-
-  function addNaTabelaPorDesc(todosSelecionados) {
-    limpaTabela();
-    for(let t of todosSelecionados) {
-      addTodoNaTabela(t);
-    }
-  }
-}
-
+});
