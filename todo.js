@@ -82,6 +82,11 @@ window.addEventListener('load', () => {
     tr.remove();
   }
 
+  function addListenerTable() {
+    const tbody = document.querySelector('#table_todos tbody');
+    tbody.addEventListener('click', clickTBody);
+  }
+
   function addTodoInTable(todo) {
     const tbody = document.querySelector('#table_todos tbody');
     tbody.innerHTML += `
@@ -116,7 +121,7 @@ window.addEventListener('load', () => {
       </tr>
     `;
 
-    tbody.addEventListener('click', clickTBody);
+    addListenerTable();
   }
 
   function addTodosInTable(todos) {
@@ -129,6 +134,7 @@ window.addEventListener('load', () => {
   function updateTodoInTable(todo) {
     document.getElementById(`desc_${todo.id}`).innerHTML = todo.desc;
     document.getElementById(`dt_${todo.id}`).innerHTML = todo.dt_final;
+    addListenerTable();
   }
 
   function loadTodos() {
