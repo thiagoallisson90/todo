@@ -202,7 +202,7 @@ window.addEventListener('load', () => {
   });
 
   const formAdd = document.getElementById('form_add');
-  function salvarTodo(ev) {  
+  formAdd.addEventListener('submit', function(ev) {  
     ev.preventDefault();
     
     const desc = document.getElementById('desc_todo').value;
@@ -221,8 +221,7 @@ window.addEventListener('load', () => {
     } else {
       fillForm(desc, dt_final, id);
     }
-  }
-  formAdd.addEventListener('submit', salvarTodo);
+  });
 
   $('#modal_add').on('hidden.bs.modal', function (ev) {
     clearForm();
