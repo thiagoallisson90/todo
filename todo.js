@@ -345,7 +345,7 @@ window.addEventListener('load', function() {
               todosSelecionados.push(t);
             }
           }
-          addTodosInTable(todosSelecionados);
+          table.addTodosInTable(todosSelecionados);
         });
 
         function debounce(func, wait) {
