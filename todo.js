@@ -1,22 +1,32 @@
 window.addEventListener('load', function() {
   // Utils
-  function dateISOToLoc(date) {
-    const dt = date.split('-');
-    dt[2] = String(Number(dt[2])+1);
-    return new Date(`${dt[0]}-${dt[1]}-${dt[2]}`).toLocaleDateString();
+  function DateUtils() {
+    const dateUtils = {
+      dateISOToLoc(date) {
+        const dt = date.split('-');
+        dt[2] = String(Number(dt[2])+1);
+        return new Date(`${dt[0]}-${dt[1]}-${dt[2]}`).toLocaleDateString();    
+      },
+      dateLocToISO(date) {
+        const dt = date.split('/');
+        return `${dt[2]}-${dt[1]}-${dt[0]}`;
+      }    
+    };
+
+    return dateUtils;
   }
 
-  function dateLocToISO(date) {
-    const dt = date.split('/');
-    return `${dt[2]}-${dt[1]}-${dt[0]}`;
-  }
+  function LineThrough() {
+    const lt = {
+      addClassLineThrough(el) {
+        el.classList.add('text-decoration-line-through');
+      },
+      remClassLineThrough(el) {
+        el.classList.remove('text-decoration-line-through');
+      }
+    };
 
-  function addClassLineThrough(el) {
-    el.classList.add('text-decoration-line-through');
-  }
-
-  function remClassLineThrough(el) {
-    el.classList.remove('text-decoration-line-through');
+    return lt;
   }
 
   // Alerts
@@ -34,7 +44,8 @@ window.addEventListener('load', function() {
   }
 
   // ToDo
-  function createTodo(desc, dt_final, id=undefined, status=0) {
+  function CreateTodo(desc, dt_final, id=undefined, status=0) {
+    const { dateISOToLoc } = DateUtils();
     return {
       desc,
       dt_final: dateISOToLoc(dt_final),
@@ -44,209 +55,243 @@ window.addEventListener('load', function() {
   }
 
   // Repo ToDo
-  function getAllTodo() {
-    const todoStr = localStorage.getItem('todos');
-    return todoStr ? JSON.parse(todoStr) : [];
-  }
-
-  function getTodoById(id) {
-    const todos = getAllTodo();
-    
-    for(let todo of todos) {
-      if(todo.id == id) {
-        return todo;
-      }
+  function RepoTodo() {
+    function parse(value) {
+      return JSON.parse(value);
     }
 
-    return false;
-  }
+    function stringify(value) {
+      return JSON.stringify(value);
+    }
 
-  function addTodo(todo) {
-    const todos = getAllTodo();
-    if(todo.id === undefined) {
-      const lastTodo = todos.at(-1);
-      todo.id = lastTodo ? lastTodo.id+1 : 0;
-      todos.push(todo);
-    } else {
-      for(let t of todos) {
-        if(t.id == todo.id) {
-          t.desc = todo.desc;
-          t.dt_final = todo.dt_final;
-          t.status = todo.status;
+    const repo = {
+      getAllTodos() {
+        const todoStr = localStorage.getItem('todos');
+        return todoStr ? JSON.parse(todoStr) : [];
+      },
+      getTodoById(id) {
+        const todos = repo.getAllTodos();
+        for(let todo of todos) {
+          if(todo.id == id) {
+            return todo;
+          }
         }
-      }
-    }
-    localStorage.setItem('todos', JSON.stringify(todos));
-  }
+        return false;
+      },
+      addTodo(todo) {
+        const todos = repo.getAllTodos();
+        if(todo.id === undefined) {
+          const lastTodo = todos.at(-1);
+          todo.id = lastTodo ? lastTodo.id+1 : 0;
+          todos.push(todo);
+        } else {
+          for(let t of todos) {
+            if(t.id == todo.id) {
+              t.desc = todo.desc;
+              t.dt_final = todo.dt_final;
+              t.status = todo.status;
+            }
+          }
+        }
+        localStorage.setItem('todos', stringify(todos));
+      },
+      delTodo(id) {
+        const todos = repo.getAllTodos();
+        if(todos.length === 0) {
+          return;
+        }
+        for(let i in todos) {
+          if(todos[i].id == id) {
+            todos.splice(i, 1);
+            break;
+          }
+        }
+        localStorage.setItem('todos', stringify(todos));
+      },
+      saveTodo(todo) {
+        const todos = repo.getAllTodos();
+        for(let i in todos) {
+          if(todos[i].id == todo.id) {
+            todos.splice(i, 1, todo);
+            break;
+          }
+        }
+        localStorage.setItem('todos', stringify(todos));
+      },
+      parse,
+      stringify
+    };
 
-  function delTodo(id) {
-    const todos = getAllTodo();
-    if(todos.length == 0) {
-      return;
-    }
-
-    for(let i in todos) {
-      if(todos[i].id == id) {
-        todos.splice(i, 1);
-        break;
-      }
-    }
-
-    localStorage.setItem('todos', JSON.stringify(todos));
-  }
-    
-  function saveTodo(todo) {
-    const todos = getAllTodo();
-    for(let i in todos) {
-      if(todos[i].id == todo.id) {
-        todos.splice(i, 1, todo);
-        break;
-      }
-    }
-
-    localStorage.setItem('todos', JSON.stringify(todos));
+    return repo;
   }
   
   // Table
-  function clearTable() {
-    const tbody = document.querySelector('#table_todos tbody');
-    tbody.innerHTML = '';
-  }
+  function TodoTable() {
+    const repo =  RepoTodo();
 
-  function remTodoOfTable(id) {
-    const tr = document.getElementById(`tr_${id}`);
-    tr.remove();
-  }
-
-  function addListenerTable() {
-    const tbody = document.querySelector('#table_todos tbody');
-    tbody.addEventListener('click', clickTBody);
-  }
-
-  function addTodoInTable(todo) {
-    const tbody = document.querySelector('#table_todos tbody');
-    tbody.innerHTML += `
-      <tr class="text-center" id="tr_${todo.id}">
-        <td>
-          <input 
-            type="checkbox" 
-            id="ckb_${todo.id}" 
-            data-target="checkout" 
-            data-index="${todo.id}"
-            ${todo.status == 1 ? 'checked' : ''}
-          >
-        </td>
-        <td 
-          id="desc_${todo.id}"
-          ${todo.status == 1 ? 'class="text-decoration-line-through"' : ''}
-        >
-          ${todo.desc}
-        </td>
-        <td 
-          id="dt_${todo.id}"
-          ${todo.status == 1 ? 'class="text-decoration-line-through"' : ''}
-        >
-          ${todo.dt_final}
-        </td>
-        <td>
-          <button 
-            class="btn btn-success" 
-            id="up_${todo.id}"
-            data-target="update" 
-            data-index="${todo.id}"
-          >
-            Alterar
-          </button>
-          <button 
-            class="btn btn-danger" 
-            id="del_${todo.id}"
-            data-target="delete" 
-            data-index="${todo.id}"
-          >
-            Deletar
-          </button>
-        </td>
-      </tr>
-    `;
-  }
-
-  function addTodosInTable(todos) {
-    clearTable();
-    for(let todo of todos) {
-      addTodoInTable(todo);
+    const table = {
+      clearTable() {
+        const tbody = document.querySelector('#table_todos tbody');
+        tbody.innerHTML = '';
+      },
+      remTodoOfTable(id) {
+        const tr = document.getElementById(`tr_${id}`);
+        tr.remove();
+      },
+      addListenerTable() {
+        const tbody = document.querySelector('#table_todos tbody');
+        tbody.addEventListener('click', clickTBody);
+      },
+      addTodoInTable(todo) {
+        const tbody = document.querySelector('#table_todos tbody');
+        tbody.innerHTML += `
+          <tr class="text-center" id="tr_${todo.id}">
+            <td>
+              <input 
+                type="checkbox" 
+                id="ckb_${todo.id}" 
+                data-target="checkout" 
+                data-index="${todo.id}"
+                ${todo.status == 1 ? 'checked' : ''}
+              >
+            </td>
+            <td 
+              id="desc_${todo.id}"
+              ${todo.status == 1 ? 'class="text-decoration-line-through"' : ''}
+            >
+              ${todo.desc}
+            </td>
+            <td 
+              id="dt_${todo.id}"
+              ${todo.status == 1 ? 'class="text-decoration-line-through"' : ''}
+            >
+              ${todo.dt_final}
+            </td>
+            <td>
+              <button 
+                class="btn btn-success" 
+                id="up_${todo.id}"
+                data-target="update" 
+                data-index="${todo.id}"
+              >
+                Alterar
+              </button>
+              <button 
+                class="btn btn-danger" 
+                id="del_${todo.id}"
+                data-target="delete" 
+                data-index="${todo.id}"
+              >
+                Deletar
+              </button>
+            </td>
+          </tr>
+        `;
+      },
+      addTodosInTable(todos) {
+        table.clearTable();
+        for(let todo of todos) {
+          table.addTodoInTable(todo);
+        }
+        table.addListenerTable();
+      },
+      updateTodoInTable(todo) {
+        const descEl = document.getElementById(`desc_${todo.id}`);
+        const dtEl = document.getElementById(`dt_${todo.id}`);
+        descEl.innerHTML = todo.desc;
+        dtEl.innerHTML = todo.dt_final;
+        const ckb = document.getElementById(`ckb_${todo.id}`);
+        const { addClassLineThrough, remClassLineThrough } = LineThrough();
+        if(todo.status == 1) {
+          addClassLineThrough(descEl);
+          addClassLineThrough(dtEl);
+          ckb.setAttribute('checked', '');
+        } else {  
+          ckb.removeAttribute('checked');
+          remClassLineThrough(descEl);
+          remClassLineThrough(dtEl);
+        }
+      },
+      loadTodosInTable() {
+        const todos = repo.getAllTodos();
+        table.clearTable();
+        for(let t of todos) {
+          table.addTodoInTable(t);
+        }
+        table.addListenerTable();
+      }
     }
-    addListenerTable();
-  }
 
-  function updateTodoInTable(todo) {
-    const descEl = document.getElementById(`desc_${todo.id}`);
-    const dtEl = document.getElementById(`dt_${todo.id}`);
-
-    descEl.innerHTML = todo.desc;
-    dtEl.innerHTML = todo.dt_final;
-    const ckb = document.getElementById(`ckb_${todo.id}`);
-
-    if(todo.status == 1) {
-      addClassLineThrough(descEl);
-      addClassLineThrough(dtEl);
-      ckb.setAttribute('checked', '');
-    } else {  
-      ckb.removeAttribute('checked');
-      remClassLineThrough(descEl);
-      remClassLineThrough(dtEl);
-    }
-  }
-
-  function loadTodosInTable() {
-    const todos = getAllTodo();
-
-    clearTable();
-    for(let t of todos) {
-      addTodoInTable(t);
-    }
-    addListenerTable();
+    return table;
   }
 
   // Listeners
-  function clickCkb(idTodo) {   
-    const desc = document.getElementById(`desc_${idTodo}`);
-    const dt_final = document.getElementById(`dt_${idTodo}`);
-
-    todo = getTodoById(idTodo);
-    if(!desc.classList.contains('text-decoration-line-through')) {
-      addClassLineThrough(desc);
-      addClassLineThrough(dt_final);
-      todo.status = 1;
-    } else {
-      remClassLineThrough(desc);
-      remClassLineThrough(dt_final);
-      todo.status = 0;
-    }
-
-    saveTodo(todo);
+  function Listener() {
+    return {
+      repo: RepoTodo()
+    };
   }
 
-  function clickBtnUp(idTodo) {
-    $('#modal_add').modal('toggle');
-    const todo = getTodoById(idTodo);
-    if(todo != false) {
-      fillForm(todo);
-    }
+  function ClickCkb() {   
+    const { repo } = Listener();
+
+    return {
+      exec(idTodo) {
+        const desc = document.getElementById(`desc_${idTodo}`);
+        const dt_final = document.getElementById(`dt_${idTodo}`);
+
+        todo = repo.getTodoById(idTodo);
+        const { addClassLineThrough, remClassLineThrough } = LineThrough();
+        if(!desc.classList.contains('text-decoration-line-through')) {
+          addClassLineThrough(desc);
+          addClassLineThrough(dt_final);
+          todo.status = 1;
+        } else {
+          remClassLineThrough(desc);
+          remClassLineThrough(dt_final);
+          todo.status = 0;
+        }
+
+        repo.saveTodo(todo);
+      }
+    };
   }
 
-  function clickBtnDel(idTodo) {
-    const del = confirm('Deseja realmente deletar ToDo?');
-    if(del==true) {
-      delTodo(idTodo);
-      remTodoOfTable(idTodo);
-      showAlertOk('ToDo removido com sucesso!');
-    }
+  function ClickBtnUp() {
+    const { repo } = Listener();
+    const { fillForm } = ModalForm();
+
+    return {
+      exec(idTodo) {
+        $('#modal_add').modal('toggle');
+        const todo = repo.getTodoById(idTodo);
+        if(todo != false) {
+          fillForm(todo);
+        }
+      }
+    };
+  }
+
+  function ClickBtnDel() {
+    const { delTodo } = RepoTodo();
+    const { remTodoOfTable } = TodoTable();
+
+    return {
+      exec(idTodo) {
+        const del = confirm('Deseja realmente deletar ToDo?');
+        if(del==true) {
+          delTodo(idTodo);
+          remTodoOfTable(idTodo);
+          showAlertOk('ToDo removido com sucesso!');
+        }
+      }
+    };
   }
 
   const clicks = {
-    'checkout': clickCkb,
-    'update': clickBtnUp,
-    'delete': clickBtnDel
+    'checkout': ClickCkb(),
+    'update': ClickBtnUp(),
+    'delete': ClickBtnDel()
   };
 
   function clickTBody(ev) {
@@ -255,90 +300,111 @@ window.addEventListener('load', function() {
     const id = Number(element.getAttribute('data-index'));
     const dataTarget = element.getAttribute('data-target');
     
-    clicks[dataTarget](id);
+    clicks[dataTarget].exec(id);
   }
 
   // Form
-  function clearForm() {
-    document.getElementById('desc_todo').value = '';
-    document.getElementById('dt_final_todo').value = '';
-    document.getElementById('id_todo').value = ''; 
-  }
+  function ModalForm() {
+    const form = {
+      clearForm() {
+        document.getElementById('desc_todo').value = '';
+        document.getElementById('dt_final_todo').value = '';
+        document.getElementById('id_todo').value = ''; 
+      },
+      fillForm(todo) {
+        const { dateLocToISO } = DateUtils();
+        document.getElementById('desc_todo').value = todo.desc;
+        document.getElementById('dt_final_todo').value = dateLocToISO(todo.dt_final);
+        document.getElementById('id_todo').value = todo.id; 
+        const optionSel = String(todo.status);
+        const statusEl = document.getElementById('status_todo');
+        statusEl.selectedIndex = optionSel;
+      }
+    };
 
-  function fillForm(todo) {
-    document.getElementById('desc_todo').value = todo.desc;
-    document.getElementById('dt_final_todo').value = dateLocToISO(todo.dt_final);
-    document.getElementById('id_todo').value = todo.id; 
-
-    const optionSel = String(todo.status);
-    const statusEl = document.getElementById('status_todo');
-    statusEl.selectedIndex = optionSel;
+    return form;
   }
 
   // Default features
-  const formSearch = document.getElementById('form_pesquisa');
-  const inputSearch = document.getElementById('input_todo');
-  formSearch.addEventListener('submit', function(ev) {
-    ev.preventDefault();
-    const value = inputSearch.value;
-    const todos = getAllTodo();
-    const todosSelecionados = [];
-    for(let t of todos) {
-      if(t.desc.toLowerCase().includes(value.toLowerCase())) {
-        todosSelecionados.push(t);
-      }
-    }
-    addTodosInTable(todosSelecionados);
-  });
+  function Main() {
+    const repo = RepoTodo();
+    const { clearForm } = ModalForm();
+    const table = TodoTable();
 
-  function debounce(func, wait) {
-    let timer = null;
-    return function() {
-      clearTimeout(timer);
-      timer = setTimeout(func, wait);
-    }
+    return {
+      main() {
+        const formSearch = document.getElementById('form_pesquisa');
+        const inputSearch = document.getElementById('input_todo');
+        formSearch.addEventListener('submit', function(ev) {
+          ev.preventDefault();
+          const value = inputSearch.value;
+          const todos = getAllTodo();
+          const todosSelecionados = [];
+          for(let t of todos) {
+            if(t.desc.toLowerCase().includes(value.toLowerCase())) {
+              todosSelecionados.push(t);
+            }
+          }
+          addTodosInTable(todosSelecionados);
+        });
+
+        function debounce(func, wait) {
+          let timer = null;
+          return function() {
+            clearTimeout(timer);
+            timer = setTimeout(func, wait);
+          }
+        }
+        inputSearch.addEventListener('input', debounce(function() {
+          const value = inputSearch.value;
+          const todos = repo.getAllTodos();
+          const todosSelecionados = [];
+          for(let t of todos) {
+            if(t.desc.toLowerCase().includes(value.toLowerCase())) {
+              todosSelecionados.push(t);
+            }
+          }
+          table.addTodosInTable(todosSelecionados);
+        }, 1500))
+
+        const formAdd = document.getElementById('form_add');
+        formAdd.addEventListener('submit', function(ev) {  
+          ev.preventDefault();
+          
+          const desc = document.getElementById('desc_todo').value;
+          let dt_final = document.getElementById('dt_final_todo').value;
+          const id = document.getElementById('id_todo').value || undefined;
+          const statusEl = document.getElementById('status_todo');
+          const status = Number(statusEl.options[statusEl.selectedIndex].value);
+          
+          const todo = CreateTodo(desc, dt_final, id, status);
+
+          repo.addTodo(todo);  
+          ev.target.reset();
+          $('#modal_add').modal('toggle');
+
+          if(id === undefined) {
+            table.addTodoInTable(todo);
+            table.addListenerTable();
+            showAlertOk(`ToDo inserido com sucesso!`);
+          } else {
+            table.updateTodoInTable(todo);
+            showAlertOk(`ToDo atualizado com sucesso!`);
+          }
+        });
+
+        $('#modal_add').on('hidden.bs.modal', function (ev) {
+          clearForm();
+        });
+
+        const table = TodoTable();
+        table.loadTodosInTable();    
+      }
+    };
   }
-  inputSearch.addEventListener('input', debounce(function() {
-    const value = inputSearch.value;
-    const todos = getAllTodo();
-    const todosSelecionados = [];
-    for(let t of todos) {
-      if(t.desc.toLowerCase().includes(value.toLowerCase())) {
-        todosSelecionados.push(t);
-      }
-    }
-    addTodosInTable(todosSelecionados);
-  }, 1500))
 
-  const formAdd = document.getElementById('form_add');
-  formAdd.addEventListener('submit', function(ev) {  
-    ev.preventDefault();
-    
-    const desc = document.getElementById('desc_todo').value;
-    let dt_final = document.getElementById('dt_final_todo').value;
-    const id = document.getElementById('id_todo').value || undefined;
-    const statusEl = document.getElementById('status_todo');
-    const status = Number(statusEl.options[statusEl.selectedIndex].value);
-    
-    const todo = createTodo(desc, dt_final, id, status);
-
-    addTodo(todo);  
-    ev.target.reset();
-    $('#modal_add').modal('toggle');
-
-    if(id === undefined) {
-      addTodoInTable(todo);
-      addListenerTable();
-      showAlertOk(`ToDo inserido com sucesso!`);
-    } else {
-      updateTodoInTable(todo);
-      showAlertOk(`ToDo atualizado com sucesso!`);
-    }
-  });
-
-  $('#modal_add').on('hidden.bs.modal', function (ev) {
-    clearForm();
-  });
-
-  loadTodosInTable();
+  (function(){
+    const main = Main();
+    main.main();
+  })();
 });
