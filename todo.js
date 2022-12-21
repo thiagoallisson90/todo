@@ -397,7 +397,6 @@ window.addEventListener('load', function() {
           clearForm();
         });
 
-        const table = TodoTable();
         table.loadTodosInTable();    
       }
     };
