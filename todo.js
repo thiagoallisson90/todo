@@ -338,7 +338,7 @@ window.addEventListener('load', function() {
         formSearch.addEventListener('submit', function(ev) {
           ev.preventDefault();
           const value = inputSearch.value;
-          const todos = getAllTodo();
+          const todos = repo.getAllTodos();
           const todosSelecionados = [];
           for(let t of todos) {
             if(t.desc.toLowerCase().includes(value.toLowerCase())) {
